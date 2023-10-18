@@ -46,19 +46,30 @@ function timeWord(str) {
   let { minutes, connector } = transformMn(arr[1]);
   let minString;
   let hourString = HOURS[hour];
-
-  if (connector === "oh") {
-    minString = connector + " " + MINUTES[minutes];
-  } else if (connector !== "undefined" && connector !== "oh") {
-    minString = minutes + " " + MINUTES[connector];
-  } else {
-    minString = MINUTES[mins];
+  try {
+    if (connector === "oh") {
+      minString = connector + " " + MINUTES[minutes];
+    } else if (connector && connector !== "oh") {
+      minString = minutes + " " + MINUTES[connector];
+    } else {
+      minString = MINUTES[minutes];
+    }
+    if (minutes === 0) {
+      minString = MINUTES[minutes];
+    }
+    return `${hourString} ${minString} ${type}`;
+  } catch (err) {
+    return err;
   }
-  return `${hourString} ${minString} ${type}`;
 }
 
 function transformHr(hr) {
+  if (+hr > 23) {
+    throw new Error("Invalid hour input");
+  }
+
   let valuesToSave = {};
+
   if (hr[0] === "0") {
     //will be am
     valuesToSave["hour"] = +hr[1];
@@ -81,13 +92,17 @@ function transformHr(hr) {
 }
 
 function transformMn(mn) {
+  if (+mn > 59) {
+    throw new Error("Invalid minute input");
+  }
+
   let valuesToSave = {};
   //if mns[1] is 2,3,4,5 set first value to respective name
   // and then add second value to str(mns[2])
   // ex. 23 => mns[2] == "twenty"+ "three"
   let y = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
 
-  if (mn[0] === "0") {
+  if (mn[0] === "0" && mn !== "00") {
     valuesToSave["minutes"] = +mn[1];
     valuesToSave["connector"] = "oh";
   }
@@ -107,9 +122,12 @@ function transformMn(mn) {
     valuesToSave["minutes"] = "fifty";
     valuesToSave["connector"] = +mn[1];
   }
+
+  if (mn == "00") {
+    valuesToSave["minutes"] = 0;
+    delete valuesToSave.connector;
+  }
   return valuesToSave;
 }
-
-console.log(timeWord("23:31"));
 
 module.exports = timeWord;
